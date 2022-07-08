@@ -1,0 +1,3 @@
+# SemiSimpleRootSystem
+
+Work in progress...
