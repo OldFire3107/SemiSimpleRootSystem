@@ -30,12 +30,13 @@ class RootSystem:
             assert np.linalg.matrix_rank(rootlist) == self.dim, 'Simple Roots provided are not linearly independant!'
 
             self.simprootlist = rootlist
-            self.gen_adj_list_and_cartan_mat()
+            self.gen_cartan_mat()
 
         else:
             self.cartan_matrix = cart_mat
             self.dim = len(cart_mat)
             self.rootsyms = symbols(f'alpha1:{self.dim+1}', commutative=False)
+            self.replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]) for i in range(self.dim) for j in range(self.dim)]
 
     @classmethod
     def fromRootList(cls, RootList):
@@ -65,7 +66,7 @@ class RootSystem:
 
         return cls(None, CartMat)
 
-    def gen_adj_list_and_cartan_mat(self):
+    def gen_cartan_mat(self):
         '''
         Computes and Returns the adjecency list of the system and its Cartan Matrix.
         '''
@@ -78,8 +79,8 @@ class RootSystem:
             resultint = np.array(result, dtype=int)
             self.cartan_matrix[:,i] =  resultint
             assert np.isclose(result, resultint).all(), 'Invalid angle between the roots!'
-            list_node = np.where(np.logical_not(np.logical_or(resultint == 0, resultint == 2)))
-            self.adj_list[i] = list_node
+            # list_node = np.where(np.logical_not(np.logical_or(resultint == 0, resultint == 2)))
+            # self.adj_list[i] = list_node
 
         ## Checking it angles are valid.
         diag2 = np.diag(np.diag(self.cartan_matrix))
@@ -91,7 +92,7 @@ class RootSystem:
         ## divided by right side and multiplied by 2
         self.replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]) for i in range(self.dim) for j in range(self.dim)]
 
-        return self.adj_list, self.cartan_matrix
+        return self.cartan_matrix
 
     def get_positive_roots_layered(self):
         '''
