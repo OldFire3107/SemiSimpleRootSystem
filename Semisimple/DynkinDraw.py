@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 from . import RootSystem
 
+rcParams.update({'figure.autolayout': True})
+
 class DynkinDraw:
     '''
     DynkinDraw Class

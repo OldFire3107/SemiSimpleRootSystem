@@ -13,6 +13,9 @@ class RootSystem:
     - Use fromCartanMatrix Method if needed to be initialized from Cartan Matrix
     - Use fromRootList if needed to be initialized from a root vector provided 
       as in eucleadian vector space
+
+    In case the cartan matrix and such variables are inaccessible make sure that
+    they are generated first.
     '''
 
     def __init__(self, rootlist=None, cart_mat=None):
@@ -203,4 +206,3 @@ class RootSystem:
             # Process all other roots
             # Rotation
             pass
-        
