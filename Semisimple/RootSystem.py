@@ -2,8 +2,6 @@ from sympy import symbols
 import numpy as np
 import itertools
 
-from traitlets import All
-
 class RootSystem:
     '''
     RootSystem Class
@@ -37,6 +35,7 @@ class RootSystem:
             self.dim = len(cart_mat)
             self.rootsyms = symbols(f'alpha1:{self.dim+1}', commutative=False)
             self.replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]) for i in range(self.dim) for j in range(self.dim)]
+            self.simprootlist = None # Would have to generate it
 
     @classmethod
     def fromRootList(cls, RootList):
@@ -53,6 +52,8 @@ class RootSystem:
         Initialize the class from the Cartan Matrix
         '''
         assert CartMat is not None, 'Provide a non empty Cartan Matrix!'
+
+        CartMat = np.array(CartMat, dtype=int)
         
         ## Checking it angles are valid.
         diag = np.diag(CartMat)
@@ -191,7 +192,15 @@ class RootSystem:
         Returns and generates simples roots from the Cartan Matrix in eucleadian geometry Vector Space.
         '''
 
-        # ToDo
+        # Starts by taking a root to be (1, 0, 0, ...dims)
+        rootlist = []
+        root1 = np.zeros(self.dim)
+        root1[0] = 1.
+        rootlist.append(root1)
         
-
-        pass
+        # Now generate other roots based on this and the cartan matrix
+        for i in range(1, self.dim):
+            # Process all other roots
+            # Rotation
+            pass
+        
