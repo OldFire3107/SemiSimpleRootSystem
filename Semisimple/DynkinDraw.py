@@ -58,12 +58,13 @@ by initializing it or at a later stage using set_root_sys method\n\n')
                         if adjnode == -1 and self.rootsys.cartan_matrix[i][row] == -1:
                             layer_adj_list[i] = 1
                         elif adjnode == -1:
-                            layer_adj_list[i] = -1 * self.rootsys.cartan_matrix[i][row]
+                            layer_adj_list[i] = self.rootsys.cartan_matrix[i][row]
                         else:
                             layer_adj_list[i] = -1 * adjnode
             if not count == 0:
                 breadthy_dia_num = breadthy_dia_num * count
             adjlist[row] = layer_adj_list
+            adjlist[row]['layer'] = 0 # Will be updated later
 
         notEnd = True
         length_dia_num = 1
@@ -73,6 +74,9 @@ by initializing it or at a later stage using set_root_sys method\n\n')
             newlistofkeys = []
             for keystosearch in listofkeys:
                 for akey in adjlist[keystosearch].keys():
+                    adjlist[keystosearch]['layer'] = length_dia_num
+                    if akey == 'layer':
+                        continue
                     newlistofkeys.append(akey)
                     if akey in adjlist.keys():
                         notEnd = True
@@ -84,6 +88,8 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         self.adjlist = adjlist
         self.breadth_num = breadthy_dia_num
         self.length_num = length_dia_num
+        
+        return self.adjlist, self.breadth_num, self.length_num
 
     def make_fig(self, linecol = 'k', fillcol = 'w'):
         '''
@@ -95,7 +101,7 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         # Find length and heigth
         maxy = 0.5 * self.breadth_num # Proportional to side ways expansion
         lowx = -0.3 # Fixed as diagram expands rightwards
-        maxx = 2.7 # Based on horizontal expansion
+        maxx = 0.3 + 0.8 * (self.length_num - 1) # Based on horizontal expansion
 
 
         # make the figure
@@ -110,24 +116,42 @@ by initializing it or at a later stage using set_root_sys method\n\n')
 
         # Loop over the adjecency list to draw dynkin diagram
         reflines = [0]
-        list_of_points = []
-        for i in range(len(self.adjlist)):
-            newreflines = []
-            minstep = None # Make stuff
+        list_of_points = [(0, 0)]
+        y_range = {0: (maxy, -maxy)}
+        i = 0
+        for keybase, valbase in self.adjlist.items():
+            startx = 0.8 * (self.adjlist[i]['layer'] - 1)
+            endx = 0.8 * self.adjlist[i]['layer']
+            upper_y = y_range[keybase][0]
+            lower_y = y_range[keybase][1]
+            ref = (upper_y + lower_y) / 2.
+            num_nodes_next = len(self.adjlist[i]) - 1
+            if num_nodes_next == 0:
+                continue
+            step = (upper_y - lower_y) / num_nodes_next
+            start = upper_y - step / 2.
+            j = 0
+            for key, values in self.adjlist[i].items():
+                if key == 'layer':
+                    continue
+                if abs(values) == 1:
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref), (endx, start - step * j)])))
+                if abs(values) == 2:
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref+0.05), (endx, start + 0.05 - step * j)])))
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref-0.05), (endx, start - 0.05 - step * j)])))
+                if abs(values) == 3:
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref), (endx, start - step * j)])))
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref-0.1), (endx, start - 0.1 - step * j)])))
+                    ax.add_patch(pc.PathPatch(pc.Path([(startx, ref+0.1), (endx, start + 0.1 - step * j)])))
 
-
-        ax.add_patch(pc.PathPatch(pc.Path([(0, 0), (0.8, 0)])))
-        ax.add_patch(pc.PathPatch(pc.Path([(0.8, -0.05), (1.6, -0.05)])))
-        ax.add_patch(pc.PathPatch(pc.Path([(0.8, 0.05), (1.6, 0.05)])))
-        ax.add_patch(pc.PathPatch(pc.Path([(1.6, 0.), (2.4, 0)])))
-        ax.add_patch(pc.PathPatch(pc.Path([(1.6, -0.1), (2.4, -0.1)])))
-        ax.add_patch(pc.PathPatch(pc.Path([(1.6, 0.1), (2.4, 0.1)])))
+                y_range[key] = (upper_y, upper_y - step * num_nodes_next)
+                list_of_points.append((endx, start - step * j))
+                j += 1
+            
+            i += 1
 
         for point in list_of_points:
             ax.add_patch(pc.Circle(point, 0.2, edgecolor=linecol, facecolor=fillcol))
-        # ax.add_patch(pc.Circle((0.8, 0), 0.2, edgecolor='k', facecolor='w'))
-        # ax.add_patch(pc.Circle((1.6, 0), 0.2, edgecolor='k', facecolor='w'))
-        # ax.add_patch(pc.Circle((2.4, 0), 0.2, edgecolor='k', facecolor='w'))
 
         self.ax = ax
         self.fig = fig
