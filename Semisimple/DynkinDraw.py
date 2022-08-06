@@ -146,6 +146,33 @@ by initializing it or at a later stage using set_root_sys method\n\n')
                     ax.add_patch(pc.PathPatch(pc.Path([(startx, ref-0.1), (endx, start - 0.1 - step * j)])))
                     ax.add_patch(pc.PathPatch(pc.Path([(startx, ref+0.1), (endx, start + 0.1 - step * j)])))
 
+                # Find mid point
+                midx = (startx + endx) / 2
+                slide_param = 0.0005 # arrow has a definite size
+
+                # Calculates the coordinates of arrows
+                midx1 = midx + slide_param
+                midx2 = midx - slide_param
+                dmidx1 = midx1 - midx2
+                midy1 = ref + (midx1 - startx) * (start - step * j - ref) / (endx - startx)
+                midy2 = ref + (midx2 - startx) * (start - step * j - ref) / (endx - startx)
+                dmidy1 = midy1 - midy2
+
+                if abs(values) > 1:
+                    arrow = None
+                    if values < 0:
+                        midx1 = midx - 0.05 + slide_param # For arrow adjustment as the tail appears otherwise
+                        midy1 = ref + (midx1 - startx) * (start - step * j - ref) / (endx - startx)
+                        arrow = pc.FancyArrow(midx1, midy1, -dmidx1, -dmidy1, color=linecol, width=0,
+                                head_width=0.3, head_length=0.1, length_includes_head=True, overhang=0.9)
+                    else:
+                        midx2 = midx + 0.05 - slide_param # For arrow adjustment as the tail appears otherwise
+                        midy2 = ref + (midx2 - startx) * (start - step * j - ref) / (endx - startx)
+                        arrow = pc.FancyArrow(midx2, midy2, dmidx1, dmidy1, color=linecol, width=0,
+                                head_width=0.3, head_length=0.1, length_includes_head=True, overhang=0.9)
+
+                    ax.add_patch(arrow) # plots the arrow
+
                 y_range[key] = (upper_y, upper_y - step * num_nodes_next)
                 list_of_points.append((endx, start - step * j))
                 j += 1
