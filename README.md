@@ -2,18 +2,20 @@
 
 Work in progress...
 
-The `main.py` shows and example of how this its used. The 2 generated dynkin diagrams are shown below:
-
-![Dynkin Diagram of G2](dia.png "Dynkin Diagram of G2")
-![Dynkin Diagram of C3](dia2.png "Dynkin Diagram of C3")
+The `main.py` shows and example of how this its used.
 
 ## RootSystem
 
-As of now it can generate the entire positive roots and all the roots of the root system.
+As of now it can generate the entire positive roots and all the roots of the root system. It also can plot the roots in A 2D plane but is only avaliable for root systems having only 2 simple roots. The `main.py` shows the $SU(3)$ root system.
+
+![Roots of SU(3)](SU(3).png "Roots of SU(3)")
 
 ## DynkinDraw
 
-It attempts to draw the dynkin diagrams of the given `RootSystem` object with `matplotlib` under the hood.
+It attempts to draw the dynkin diagrams of the given `RootSystem` object with `matplotlib` under the hood. The 2 generated dynkin diagrams from `main.py` are shown below:
+
+![Dynkin Diagram of G2](dia.png "Dynkin Diagram of G2")
+![Dynkin Diagram of C3](dia2.png "Dynkin Diagram of C3")
 
 ## Important Note
 

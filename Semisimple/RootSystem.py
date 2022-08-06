@@ -1,7 +1,15 @@
 from sympy import symbols
 import numpy as np
 import itertools
+from matplotlib import rcParams
+import matplotlib.pyplot as plt
 
+rcParams.update({'figure.autolayout': True})
+
+# An important note is that while calculating p-q values using the replacements for the symbols from
+# the cartan matrix initialization or when they are found while finding cartan matrix are actually
+# not alpha_i * alpha_j but alpha_i * alpha_j / alpha_i ** 2 and hence should not be used for other 
+# calculations as its non commutative. This is used to make things easier for finding all the roots.
 class RootSystem:
     '''
     RootSystem Class
@@ -20,11 +28,16 @@ class RootSystem:
 
     def __init__(self, rootlist=None, cart_mat=None):
 
+        self.roots = None # Computationally intensive, only generates when function called or needed
+
         if rootlist is not None:
             rootlist = np.array(rootlist)
             length = len(rootlist[0])
             self.dim = len(rootlist)
             self.rootsyms = symbols(f'alpha1:{self.dim+1}', commutative=False)
+            # Symbols can't be replaced directly with arrays so have to store it as a 2D matrix so they can be substituted
+            # in a loop multiple times to get the list later on.
+            self.simpreplace = [[(self.rootsyms[i], rootlist[i][j]) for i in range(self.dim)] for j in range(self.dim)]
             for simpleroot in rootlist[1:]:
                 assert len(simpleroot) == length , 'Root vector sizes inconsistent!'
 
@@ -39,6 +52,7 @@ class RootSystem:
             self.rootsyms = symbols(f'alpha1:{self.dim+1}', commutative=False)
             self.replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]) for i in range(self.dim) for j in range(self.dim)]
             self.simprootlist = None # Would have to generate it
+            self.simpreplace = None # Would have to generate it with the above list
 
     @classmethod
     def fromRootList(cls, RootList):
@@ -79,7 +93,9 @@ class RootSystem:
         self.cartan_matrix = np.zeros((self.dim, self.dim), dtype=int)
         for i in range(len(self.simprootlist)):
             simple_root = self.simprootlist[i]
+            # Calculating the column of cartan matrix
             result = 2. * np.dot(self.simprootlist, simple_root) / (np.linalg.norm(simple_root) ** 2)
+            # Cartan matrix can only be integers
             resultint = np.array(result, dtype=int)
             self.cartan_matrix[:,i] =  resultint
             assert np.isclose(result, resultint).all(), 'Invalid angle between the roots!'
@@ -183,26 +199,72 @@ class RootSystem:
         return PositiveRoots
 
     def get_all_roots(self):
+        '''
+        Returns all the posible roots.
+        '''
         Positive_roots = self.get_positive_roots_layered()
         All_roots = list(itertools.chain(*Positive_roots))
         for i in range(len(All_roots)):
             nege = All_roots[i]*-1
             All_roots.append(nege.expand())
+
+        self.roots = All_roots
         return All_roots
 
-    def generate_simple_roots(self):
+    def plot_2D_space(self):
         '''
-        Returns and generates simples roots from the Cartan Matrix in eucleadian geometry Vector Space.
-        '''
+        Plots the root system (only 2 dimensional system) on the cartesian 2D plane.
+        Note that the first root entry in cartan matrix corresponds to the x axis.
 
-        # Starts by taking a root to be (1, 0, 0, ...dims)
-        rootlist = []
-        root1 = np.zeros(self.dim)
-        root1[0] = 1.
-        rootlist.append(root1)
+        Returns the matplotlib figure and axis objects.
+        '''
+        assert self.dim == 2 , f'Not a 2 dimentional root system, it has {self.dim} simple roots instead of 2'
+
+        # Check if the roots are defined else it is made
+        # Making roots if not defined
+        if self.simprootlist is None:
+            root1 = (1, 0) # Fixing the first root
+            root2 = None
+            angle_cart = self.cartan_matrix[0][1]
+            if angle_cart == -1:
+                angle_cart = -1 * self.cartan_matrix[1][0]
+
+            # Finding the 2nd root based on the 3 angles
+            multiplier = None
+            if abs(angle_cart) == 1: # 120 deg
+                multiplier = 1
+                root2 = (-0.5, np.sqrt(3)/2)
+            elif abs(angle_cart) == 2: # 135 deg
+                multiplier = np.sqrt(2) 
+                root2 = (-np.sqrt(2), np.sqrt(2))
+            elif abs(angle_cart) == 3: # 150 deg
+                multiplier = np.sqrt(3) 
+                root2 = (-np.sqrt(3)/2, 0.5)
+            else:
+                multiplier = 1 # It is 2 independant SU(2) system
+                print('Here both the roots are taken to be of the same magnitude but it can be different as they are 2 independant SU(2)  systems.')
+                root2 = (0, 1) # 90 deg
+
+            if angle_cart < 0:
+                root2 = [rootx / multiplier for rootx in root2]
+            else:
+                root2 = [rootx * multiplier for rootx in root2]
+
+            self.simprootlist = np.array([root1, root2])
         
-        # Now generate other roots based on this and the cartan matrix
-        for i in range(1, self.dim):
-            # Process all other roots
-            # Rotation
-            pass
+        if self.simpreplace is None:
+            self.simpreplace = [[(self.rootsyms[i], self.simprootlist[i][j]) for i in range(self.dim)] for j in range(self.dim)]
+
+        # Generate all the roots if not done already
+        if self.roots is None:
+            self.get_all_roots()
+
+        # Substituting all the alphas in the root list
+        replaced_roots = [tuple([a_root.subs(repl) for repl in self.simpreplace]) for a_root in self.roots]
+
+        fig, ax = plt.subplots()
+        ax.scatter(*zip(*replaced_roots))
+        ax.scatter(0, 0)
+
+        return fig, ax
+        
