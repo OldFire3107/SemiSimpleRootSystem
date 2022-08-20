@@ -1,3 +1,4 @@
+from iteration_utilities import deepflatten
 from sympy import symbols
 import numpy as np
 import itertools
@@ -29,6 +30,10 @@ class RootSystem:
     def __init__(self, rootlist=None, cart_mat=None):
 
         self.roots = None # Computationally intensive, only generates when function called or needed
+        self.PositiveRoots = None
+        self.q = None
+        self.p = None
+        self.basic_commutators = None
 
         if rootlist is not None:
             rootlist = np.array(rootlist)
@@ -124,6 +129,8 @@ class RootSystem:
         # k = 0 is just the cartan matrix
         # k = 1 layer will always be there
         kzero = []
+        self.q = []
+        self.p = []
 
         for simpleroots in self.rootsyms:
             kzero.append(simpleroots)
@@ -161,6 +168,8 @@ class RootSystem:
             krowlist = []
 
             p_vals = q_vals - qpval
+            self.p.append(p_vals)
+            self.q.append(q_vals)
             for i in range(len(p_vals)):
                 for j in range(self.dim):
                     if p_vals[i][j] > 0:
@@ -195,15 +204,16 @@ class RootSystem:
             q_vals = np.array(new_qvals, dtype=int)
             qpval = np.array(new_qpvals, dtype=int)
             
-
+        self.PositiveRoots = PositiveRoots
         return PositiveRoots
 
     def get_all_roots(self):
         '''
         Returns all the posible roots.
         '''
-        Positive_roots = self.get_positive_roots_layered()
-        All_roots = list(itertools.chain(*Positive_roots))
+        if self.PositiveRoots is None:
+            self.get_positive_roots_layered()
+        All_roots = list(itertools.chain(*self.Positive_roots))
         for i in range(len(All_roots)):
             nege = All_roots[i]*-1
             All_roots.append(nege.expand())
@@ -267,4 +277,41 @@ class RootSystem:
         ax.scatter(0, 0)
 
         return fig, ax
+    
+    def gen_basic_commutators(self):
+        '''
+        Computes the basic commutators for the root system and stores them.
+
+        Returns the basic commutators.
+        '''
+
+        self.basic_commutators = {}
+        
+        # Checks if the positive roots are generated
+        if self.PositiveRoots is None:
+            self.get_positive_roots_layered()
+
+        for i in range(len(self.PositiveRoots)-1):
+            for j in range(len(self.PositiveRoots[i])):
+                for k in range(len(self.PositiveRoots[0])):
+                    if self.p[i][j][k] > 0:
+                        j_val = (self.q[i][j][k] + self.p[i][j][k])/2
+                        m_val = (self.q[i][j][k] - self.p[i][j][k])/2
+                        check_root = self.PositiveRoots[i][j] + self.PositiveRoots[0][k]
+
+                        # Check if the root is already in the dictionary of commutators
+                        if check_root in self.basic_commutators:
+                            break
+
+                        try:
+                            const_term, commutator = self.basic_commutators[self.PositiveRoots[i][j]]
+                        except:
+                            const_term = 1
+                            commutator = self.PositiveRoots[i][j]
+
+                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2)
+                        
+                        self.basic_commutators[check_root] = (const_term, [self.PositiveRoots[0][k], commutator])
+
+        return self.basic_commutators
         
