@@ -1,12 +1,12 @@
 # SemiSimpleRootSystem
 
-Work in progress...
+Work in progress... (The algorithms in this code are not optimized completely).
 
 The `main.py` shows and example of how this its used.
 
 ## RootSystem
 
-As of now it can generate the entire positive roots and all the roots of the root system. It also can plot the roots in A 2D plane but is only avaliable for root systems having only 2 simple roots. The `main.py` shows the $SU(3)$ root system.
+As of now it can generate the entire positive roots and all the roots of the root system. It also can plot the roots in A 2D plane but is only avaliable for root systems having only 2 simple roots. Also, it finds the relationships of the roots other than simple roots interms of commutatators of simple roots. This generated dictionary contains the constant and the commutator as a list. This can be used with Jacobi identity to find the commutator with any other root. The `main.py` shows the $SU(3)$ root system.
 
 ![Roots of SU(3)](SU(3).png "Roots of SU(3)")
 
@@ -16,6 +16,10 @@ It attempts to draw the dynkin diagrams of the given `RootSystem` object with `m
 
 ![Dynkin Diagram of G2](dia.png "Dynkin Diagram of G2")
 ![Dynkin Diagram of C3](dia2.png "Dynkin Diagram of C3")
+
+## TheAlgebra
+
+This class computes the commutators adnd the necessary information such as structure constants for the Lie Algebra.
 
 ## Important Note
 
@@ -27,6 +31,7 @@ _openmp_mutex             5.1                       1_gnu
 bzip2                     1.0.8                h7b6447c_0  
 ca-certificates           2022.4.26            h06a4308_0  
 certifi                   2022.6.15       py310h06a4308_0  
+iteration-utilities       0.11.0                   pypi_0    pypi
 ld_impl_linux-64          2.38                 h1181459_1  
 libffi                    3.3                  he6710b0_2  
 libgcc-ng                 11.2.0               h1234567_1  

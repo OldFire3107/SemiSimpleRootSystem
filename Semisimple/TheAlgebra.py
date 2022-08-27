@@ -1,3 +1,5 @@
+from . import RootSystem
+
 class TheAlgebra:
     '''
     TheAlgebra Class

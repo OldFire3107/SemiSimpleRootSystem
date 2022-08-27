@@ -34,6 +34,7 @@ class RootSystem:
         self.q = None
         self.p = None
         self.basic_commutators = None
+        self.raising_norm = None
 
         if rootlist is not None:
             rootlist = np.array(rootlist)
@@ -277,6 +278,29 @@ class RootSystem:
         ax.scatter(0, 0)
 
         return fig, ax
+
+    def get_raising_norm(self):
+        '''
+        Returns and stores the normalization of the raising operator.
+        '''
+
+        self.raising_norm = np.empty(self.dim)
+        self.raising_norm.fill(np.nan)
+        self.raising_norm[0] = 1.0
+
+        for i in range(self.dim - 1):
+            for j in range(i+1, self.dim):
+                if self.raising_norm[i] == np.nan or self.cartan_matrix[i][j] == 0:
+                    continue
+                if self.cartan_matrix[i][j] == -1:
+                    self.raising_norm[j] = np.sqrt(-1*self.cartan_matrix[j][i]) * self.raising_norm[i]
+                else:
+                    self.raising_norm[j] = 1 / np.sqrt(-1*self.cartan_matrix[i][j]) * self.raising_norm[i]
+
+        self.raising_norm = self.raising_norm / np.min(self.raising_norm)
+
+        return self.raising_norm
+
     
     def gen_basic_commutators(self):
         '''
@@ -290,6 +314,9 @@ class RootSystem:
         # Checks if the positive roots are generated
         if self.PositiveRoots is None:
             self.get_positive_roots_layered()
+
+        if self.raising_norm is None:
+            self.get_raising_norm()
 
         for i in range(len(self.PositiveRoots)-1):
             for j in range(len(self.PositiveRoots[i])):
@@ -309,7 +336,7 @@ class RootSystem:
                             const_term = 1
                             commutator = self.PositiveRoots[i][j]
 
-                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2)
+                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) / self.raising_norm[k]
                         
                         self.basic_commutators[check_root] = (const_term, [self.PositiveRoots[0][k], commutator])
 
