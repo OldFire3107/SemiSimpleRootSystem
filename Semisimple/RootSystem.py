@@ -34,7 +34,8 @@ class RootSystem:
         self.q = None
         self.p = None
         self.basic_commutators = None
-        self.raising_norm = None
+        self.raising_norm = None    
+        self.n_roots = None
 
         if rootlist is not None:
             rootlist = np.array(rootlist)
@@ -220,6 +221,7 @@ class RootSystem:
             All_roots.append(nege.expand())
 
         self.roots = All_roots
+        self.n_roots = len(self.roots)
         return All_roots
 
     def plot_2D_space(self):
@@ -283,6 +285,12 @@ class RootSystem:
         '''
         Returns and stores the normalization of the raising operator.
         '''
+
+        if self.simprootlist is not None:
+            self.raising_norm = np.linalg.norm(self.simprootlist, axis=1)
+            self.raising_norm = self.raising_norm / np.min(self.raising_norm)
+            return self.raising_norm
+
 
         self.raising_norm = np.empty(self.dim)
         self.raising_norm.fill(np.nan)

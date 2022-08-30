@@ -1,3 +1,5 @@
+import numpy as np
+
 from . import RootSystem
 
 class TheAlgebra:
@@ -15,17 +17,18 @@ class TheAlgebra:
 by initializing it or at a later stage using set_root_sys method\n\n')
         self.rootsys = rootsys
 
-    def compute_computator(self, root1, root2):
+    def gen_structure_constants(self):
         '''
-        Computes the computator for a given root.
+        Generates the structure constants for the algebra.
         '''
 
-        # Checks whether it is a valid root
+        # Checks whether the roots are generated
         if self.rootsys.roots is None:
             self.rootsys.gen_all_roots()
-
-        if not root1 in self.rootsys.roots and not root2 in self.rootsys.roots:
-            print('\nWARNING INVALID ROOT. Please provide a valid root\n\n')
-            return None
         
-        # Computes the computator
+        # Checks whether the basics commutator is generated.
+        if self.rootsys.basics_commutator is None:
+            self.rootsys.gen_basics_commutator()
+
+        # Create an empty matrix for the structure constants.
+        self.structure_constants = np.zeros((2*self.rootsys.n_roots, 2*self.rootsys.n_roots))

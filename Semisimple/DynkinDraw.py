@@ -71,10 +71,16 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         notEnd = True
         length_dia_num = 1
         listofkeys = [0]
+        adjkeys = list(adjlist.keys())
         while notEnd:
             notEnd = False
             newlistofkeys = []
             for keystosearch in listofkeys:
+                try:
+                    adjkeys.remove(keystosearch)
+                except ValueError:
+                    print('Warning: Root System may have a cyclic structure. It may not be fully supported at the moment.')
+                    pass
                 for akey in adjlist[keystosearch].keys():
                     adjlist[keystosearch]['layer'] = length_dia_num
                     if akey == 'layer':
@@ -82,6 +88,11 @@ by initializing it or at a later stage using set_root_sys method\n\n')
                     newlistofkeys.append(akey)
                     if akey in adjlist.keys():
                         notEnd = True
+
+            # If they are not connected starte antother layer
+            if not notEnd and len(adjkeys) != 0:
+                newlistofkeys.append(adjkeys[0])
+                notEnd = True
 
             listofkeys = newlistofkeys
             if notEnd:
@@ -120,20 +131,35 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         reflines = [0]
         list_of_points = [(0, 0)]
         y_range = {0: (maxy, -maxy)}
+        to_beadded = None
         i = 0
         for keybase, valbase in self.adjlist.items():
+
+            if to_beadded is not None:
+                list_of_points.append(to_beadded)
+                to_beadded = None
+
             startx = 0.8 * (self.adjlist[i]['layer'] - 1)
             endx = 0.8 * self.adjlist[i]['layer']
-            upper_y = y_range[keybase][0]
-            lower_y = y_range[keybase][1]
+            try:
+                upper_y = y_range[keybase][0]
+                lower_y = y_range[keybase][1]
+            except KeyError: # If they are not connected start antother layer
+                upper_y = maxy
+                lower_y = -maxy
             ref = (upper_y + lower_y) / 2.
             num_nodes_next = len(self.adjlist[i]) - 1
             if num_nodes_next == 0:
-                continue
-            step = (upper_y - lower_y) / num_nodes_next
+                step = 1 # If next layer exists
+            else:
+                step = (upper_y - lower_y) / num_nodes_next
             start = upper_y - step / 2.
             j = 0
+                
             for key, values in self.adjlist[i].items():
+                if len(self.adjlist[i].items()) == 1:
+                    to_beadded = (endx, start)
+                    break
                 if key == 'layer':
                     continue
                 if abs(values) == 1:
