@@ -89,7 +89,7 @@ by initializing it or at a later stage using set_root_sys method\n\n')
                     if akey in adjlist.keys():
                         notEnd = True
 
-            # If they are not connected starte antother layer
+            # If they are not connected start antother layer
             if not notEnd and len(adjkeys) != 0:
                 newlistofkeys.append(adjkeys[0])
                 notEnd = True

@@ -283,7 +283,8 @@ class RootSystem:
 
     def get_raising_norm(self):
         '''
-        Returns and stores the normalization of the raising operator.
+        Returns and stores the normalization of the raising operator. Each independant simple 
+        group will have minimum magnitude 1.
         '''
 
         if self.simprootlist is not None:
@@ -294,18 +295,25 @@ class RootSystem:
 
         self.raising_norm = np.empty(self.dim)
         self.raising_norm.fill(np.nan)
-        self.raising_norm[0] = 1.0
 
-        for i in range(self.dim - 1):
-            for j in range(i+1, self.dim):
-                if self.raising_norm[i] == np.nan or self.cartan_matrix[i][j] == 0:
-                    continue
-                if self.cartan_matrix[i][j] == -1:
-                    self.raising_norm[j] = np.sqrt(-1*self.cartan_matrix[j][i]) * self.raising_norm[i]
-                else:
-                    self.raising_norm[j] = 1 / np.sqrt(-1*self.cartan_matrix[i][j]) * self.raising_norm[i]
+        while np.isnan(self.raising_norm).any():
+            newlyadded = [np.argmax(np.isnan(self.raising_norm))]
+            self.raising_norm[np.argmax(np.isnan(self.raising_norm))] = 1.0
+            for i in range(self.dim - 1):
+                for j in range(i+1, self.dim):
+                    if not np.isnan(self.raising_norm[j]):
+                        continue
+                    if self.raising_norm[i] == np.nan or self.cartan_matrix[i][j] == 0:
+                        continue
+                    if self.cartan_matrix[i][j] == -1:
+                        self.raising_norm[j] = np.sqrt(-1*self.cartan_matrix[j][i]) * self.raising_norm[i]
+                    else:
+                        self.raising_norm[j] = 1 / np.sqrt(-1*self.cartan_matrix[i][j]) * self.raising_norm[i]
 
-        self.raising_norm = self.raising_norm / np.min(self.raising_norm)
+                    newlyadded.append(j)
+
+            self.raising_norm[newlyadded] = self.raising_norm[newlyadded] / min(self.raising_norm[newlyadded])
+            print(self.raising_norm)
 
         return self.raising_norm
 

@@ -19,7 +19,13 @@ by initializing it or at a later stage using set_root_sys method\n\n')
 
     def gen_structure_constants(self):
         '''
-        Generates the structure constants for the algebra.
+        Generates the structure constants for the algebra, expected for the ones
+        that involve the Cartan generators or have them in the result as thier 
+        calculation is trivial enough.
+
+        Antisymmetric of the structure constants can be used to get all the relationship
+        between the roots. Also a positive root subtracted with a negetive root will 
+        never be a root. All these are exploited here to get the structure constants.
         '''
 
         # Checks whether the roots are generated
@@ -30,5 +36,9 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         if self.rootsys.basics_commutator is None:
             self.rootsys.gen_basics_commutator()
 
-        # Create an empty matrix for the structure constants.
+        # Create an empty matrix for the structure constants. Not including Cartan generators as it needs the roots in vector form.
+        # Also we know that Cartan Generator with the generator would just give the component of the root in the direction of the generator.
+        # It is also know that positive and the negetive roots will just give the root dotted with the Cartan generators.
         self.structure_constants = np.zeros((2*self.rootsys.n_roots, 2*self.rootsys.n_roots))
+
+        
