@@ -215,7 +215,7 @@ class RootSystem:
         '''
         if self.PositiveRoots is None:
             self.get_positive_roots_layered()
-        All_roots = list(itertools.chain(*self.Positive_roots))
+        All_roots = list(itertools.chain(*self.PositiveRoots))
         for i in range(len(All_roots)):
             nege = All_roots[i]*-1
             All_roots.append(nege.expand())
@@ -313,7 +313,6 @@ class RootSystem:
                     newlyadded.append(j)
 
             self.raising_norm[newlyadded] = self.raising_norm[newlyadded] / min(self.raising_norm[newlyadded])
-            print(self.raising_norm)
 
         return self.raising_norm
 
@@ -352,7 +351,7 @@ class RootSystem:
                             const_term = 1
                             commutator = self.PositiveRoots[i][j]
 
-                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) / self.raising_norm[k]
+                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) * self.raising_norm[k]
                         
                         self.basic_commutators[check_root] = (const_term, [self.PositiveRoots[0][k], commutator])
 
