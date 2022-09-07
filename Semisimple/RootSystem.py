@@ -314,6 +314,8 @@ class RootSystem:
 
             self.raising_norm[newlyadded] = self.raising_norm[newlyadded] / min(self.raising_norm[newlyadded])
 
+            self.proper_replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]*(self.raising_norm[j]**2)) for i in range(self.dim) for j in range(self.dim)]
+
         return self.raising_norm
 
     
@@ -356,4 +358,3 @@ class RootSystem:
                         self.basic_commutators[check_root] = (const_term, [self.PositiveRoots[0][k], commutator])
 
         return self.basic_commutators
-        
