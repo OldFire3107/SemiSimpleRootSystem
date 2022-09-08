@@ -1,6 +1,3 @@
-from cmath import isnan
-from operator import index
-import struct
 import numpy as np
 
 from . import RootSystem
