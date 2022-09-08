@@ -128,13 +128,13 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         # Give the input for the recursive function
         for i in range(1,len(self.rootsys.PositiveRoots)): # Skipping simple roots as they are already calculated.
             for j in range(len(self.rootsys.PositiveRoots[i])):
-                for k in range(1,i): # Skipping simple roots as they are already calculated.
-                    for l in range(j):
+                for k in range(1,i+1): # Skipping simple roots as they are already calculated.
+                    for l in range(j+1):
                         rootA = self.rootsys.roots.index(self.rootsys.PositiveRoots[i][j])
                         rootB = self.rootsys.roots.index(self.rootsys.PositiveRoots[k][l])
 
                         if np.isnan(self.algebra_constants[rootA][rootB]):
-                            self.__pos_struct_rec(self.rootsys.PositiveRoots[i][j], self.rootsys.PositiveRoots[k][l])
+                            self.__recursive_cal_pos(self.rootsys.PositiveRoots[i][j], self.rootsys.PositiveRoots[k][l])
 
     
     def compute_commutator(self, root1, root2):
@@ -168,7 +168,7 @@ by initializing it or at a later stage using set_root_sys method\n\n')
         else:
             return self.algebra_constants[rootA][rootB]
 
-        if (root1 + root2) not in self.rootsys.PositiveRoots:
+        if (root1 + root2) not in self.rootsys.roots:
             if Add_entry:
                 self.algebra_constants[rootA][rootB] = 0
                 self.algebra_constants[rootB][rootA] = 0
@@ -195,12 +195,21 @@ by initializing it or at a later stage using set_root_sys method\n\n')
 
         if common:
             common = common[0]
-            subcommutator_term11 = rootA - self.rootsys.rootsyms[common]
-            subcommutator_term12 = subcommutator_term11 + rootB
+            subcommutator_term11 = root1 - self.rootsys.rootsyms[common]
+            subcommutator_term12 = subcommutator_term11 + root2
             subcommutator_term11_index = self.rootsys.roots.index(subcommutator_term11)
+            try:
+                subcommutator_term12_index = self.rootsys.roots.index(subcommutator_term12)
+            except ValueError:
+                if Add_entry:
+                    self.algebra_constants[rootA][rootB] = 0
+                    self.algebra_constants[rootB][rootA] = 0
+                    self.algebra_constants[rootAneg][rootBneg] = 0
+                    self.algebra_constants[rootBneg][rootAneg] = 0
+                return 0
 
             in1, in2 = self.__index_2d(subcommutator_term12)
-            indexsimp = self.rootsys.roots.index(common)
+            indexsimp = common
             if self.rootsys.p[in1][in2][indexsimp] == 0:
                 if Add_entry:
                     self.algebra_constants[rootA][rootB] = 0
@@ -210,15 +219,12 @@ by initializing it or at a later stage using set_root_sys method\n\n')
                 return 0
 
             const = 1 / self.algebra_constants[indexsimp][subcommutator_term11_index]
-            if np.isnan(self.algebra_constants[subcommutator_term11][rootB]):
-                const *= self.__recursive_cal_pos(subcommutator_term11, rootB)
+            if np.isnan(self.algebra_constants[subcommutator_term11_index][rootB]):
+                const *= self.__recursive_cal_pos(subcommutator_term11, root2)
             else:
-                const *= self.algebra_constants[subcommutator_term11][rootB]
+                const *= self.algebra_constants[subcommutator_term11_index][rootB]
 
-            j_val = (self.rootsys.q[in1][in2][indexsimp] + self.rootsys.p[in1][in2][indexsimp])/2
-            m_val = (self.rootsys.q[in1][in2][indexsimp] - self.rootsys.p[in1][in2][indexsimp])/2
-
-            const *= np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) * self.rootsys.raising_norm[indexsimp]
+            const *= self.algebra_constants[indexsimp][subcommutator_term12_index]
 
             if Add_entry:
                 self.algebra_constants[rootA][rootB] = -const
@@ -230,10 +236,11 @@ by initializing it or at a later stage using set_root_sys method\n\n')
 
         else:
             common = roots_to_switch[0]
+            indexsimp = common
 
             # Seperate the roots into 2 parts
-            subcommutator_term11 = rootA - self.rootsys.rootsyms[common]
-            subcommutator_term12 = subcommutator_term11 + rootB
+            subcommutator_term11 = root1 - self.rootsys.rootsyms[common]
+            subcommutator_term12 = subcommutator_term11 + root2
             subcommutator_term11_index = self.rootsys.roots.index(subcommutator_term11)
 
             const = 1 / self.algebra_constants[indexsimp][subcommutator_term11_index]
@@ -241,23 +248,28 @@ by initializing it or at a later stage using set_root_sys method\n\n')
             const_term_1 = 1
             const_term_2 = 1
 
-            # Commuting the first term just like in the if part
-            in1, in2 = self.__index_2d(subcommutator_term12)
-            indexsimp = self.rootsys.roots.index(common)
-            if self.rootsys.p[in1][in2][indexsimp] == 0: # Only second term matters
-                const_term_1 = 0
-            else:
-                if np.isnan(self.algebra_constants[subcommutator_term11_index][rootB]):
-                    const_term_1 *= self.__recursive_cal_pos(subcommutator_term11, rootB)
-                else:
-                    const_term_1 *= self.algebra_constants[subcommutator_term11_index][rootB]
 
-                const_term_1 *= self.algebra_constants[indexsimp][subcommutator_term11_index] # Since simple root stuff already calculated
+            try:
+                subcommutator_term12_index = self.rootsys.roots.index(subcommutator_term12)
+                in1, in2 = self.__index_2d(subcommutator_term12)
+
+                # Commuting the first term just like in the if part.
+                if self.rootsys.p[in1][in2][indexsimp] == 0: # Only second term matters
+                    const_term_1 = 0
+                else:
+                    if np.isnan(self.algebra_constants[subcommutator_term11_index][rootB]):
+                        const_term_1 *= self.__recursive_cal_pos(subcommutator_term11, root2)
+                    else:
+                        const_term_1 *= self.algebra_constants[subcommutator_term11_index][root2]
+
+                    const_term_1 *= self.algebra_constants[indexsimp][subcommutator_term12_index] # Since simple root stuff already calculated
+            except ValueError:
+                const_term_1 = 0
             
             # Commuting the second term
-            subcommutator_term21 = rootB + self.rootsys.rootsyms[common]
+            subcommutator_term21 = root2 + self.rootsys.rootsyms[common]
             subcommutator_term21_index = self.rootsys.roots.index(subcommutator_term21)
-            const_term_2 *= self.algebra_constants[indexsimp][subcommutator_term21] # Since simple root stuff already calculated
+            const_term_2 *= self.algebra_constants[indexsimp][subcommutator_term21_index] # Since simple root stuff already calculated
 
             if np.isnan(self.algebra_constants[subcommutator_term11_index][subcommutator_term21_index]):
                 const_term_2 *= self.__recursive_cal_pos(subcommutator_term11 ,subcommutator_term21)
