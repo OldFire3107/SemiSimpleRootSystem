@@ -36,6 +36,7 @@ class RootSystem:
         self.basic_commutators = None
         self.raising_norm = None    
         self.n_roots = None
+        self.proper_replacements = None
 
         if rootlist is not None:
             rootlist = np.array(rootlist)
@@ -290,7 +291,8 @@ class RootSystem:
         if self.simprootlist is not None:
             self.raising_norm = np.linalg.norm(self.simprootlist, axis=1)
             self.raising_norm = self.raising_norm / np.min(self.raising_norm)
-            return self.raising_norm
+            self.proper_replacements = [(self.rootsyms[i] * self.rootsyms[j], abs(self.cartan_matrix[i][j]/2*(self.raising_norm[j]**2))) for i in range(self.dim) for j in range(self.dim)]
+            return self.raising_norm, self.proper_replacements
 
 
         self.raising_norm = np.empty(self.dim)
@@ -314,9 +316,9 @@ class RootSystem:
 
             self.raising_norm[newlyadded] = self.raising_norm[newlyadded] / min(self.raising_norm[newlyadded])
 
-            self.proper_replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]*(self.raising_norm[j]**2)) for i in range(self.dim) for j in range(self.dim)]
+        self.proper_replacements = [(self.rootsyms[i] * self.rootsyms[j], self.cartan_matrix[i][j]*(self.raising_norm[j]**2)) for i in range(self.dim) for j in range(self.dim)]
 
-        return self.raising_norm
+        return self.raising_norm, self.proper_replacements
 
     
     def gen_basic_commutators(self):
@@ -338,7 +340,7 @@ class RootSystem:
         for i in range(len(self.PositiveRoots)-1):
             for j in range(len(self.PositiveRoots[i])):
                 for k in range(len(self.PositiveRoots[0])):
-                    if self.p[i][j][k] > 0:
+                    if self.p[i][j][k] > 0: # We are not considering the last one as it is the highest k value root.
                         j_val = (self.q[i][j][k] + self.p[i][j][k])/2
                         m_val = (self.q[i][j][k] - self.p[i][j][k])/2
                         check_root = self.PositiveRoots[i][j] + self.PositiveRoots[0][k]
@@ -353,7 +355,7 @@ class RootSystem:
                             const_term = 1
                             commutator = self.PositiveRoots[i][j]
 
-                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) * self.raising_norm[k]
+                        const_term = const_term * 1 / np.sqrt((j_val + m_val + 1) * (j_val - m_val) / 2) / self.raising_norm[k]
                         
                         self.basic_commutators[check_root] = (const_term, [self.PositiveRoots[0][k], commutator])
 
